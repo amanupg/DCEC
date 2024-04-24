@@ -2,7 +2,7 @@ from keras.layers import Conv2D, Conv2DTranspose, Dense, Flatten, Reshape
 from keras.models import Sequential, Model
 from keras.utils.vis_utils import plot_model
 import numpy as np
-
+from datasets import load_custom_dataset  # Import the custom dataset loader function
 
 def CAE(input_shape=(28, 28, 1), filters=[32, 64, 128, 10]):
     model = Sequential()
@@ -35,7 +35,7 @@ if __name__ == "__main__":
     # setting the hyper parameters
     import argparse
     parser = argparse.ArgumentParser(description='train')
-    parser.add_argument('--dataset', default='usps', choices=['mnist', 'usps'])
+    parser.add_argument('--dataset', default='custom', choices=['custom'])  # Only 'custom' dataset option
     parser.add_argument('--n_clusters', default=10, type=int)
     parser.add_argument('--batch_size', default=256, type=int)
     parser.add_argument('--epochs', default=200, type=int)
@@ -48,28 +48,25 @@ if __name__ == "__main__":
         os.makedirs(args.save_dir)
 
     # load dataset
-    from datasets import load_mnist, load_usps
-    if args.dataset == 'mnist':
-        x, y = load_mnist()
-    elif args.dataset == 'usps':
-        x, y = load_usps('data/usps')
+    x, y = load_custom_dataset()  # Load custom dataset
+    input_shape = x.shape[1:]  # Get input shape from loaded dataset
 
     # define the model
-    model = CAE(input_shape=x.shape[1:], filters=[32, 64, 128, 10])
-    plot_model(model, to_file=args.save_dir + '/%s-pretrain-model.png' % args.dataset, show_shapes=True)
+    model = CAE(input_shape=input_shape, filters=[32, 64, 128, 10])  # Pass input_shape to the model
+    plot_model(model, to_file=args.save_dir + '/custom-pretrain-model.png', show_shapes=True)
     model.summary()
 
     # compile the model and callbacks
     optimizer = 'adam'
     model.compile(optimizer=optimizer, loss='mse')
     from keras.callbacks import CSVLogger
-    csv_logger = CSVLogger(args.save_dir + '/%s-pretrain-log.csv' % args.dataset)
+    csv_logger = CSVLogger(args.save_dir + '/custom-pretrain-log.csv')
 
     # begin training
     t0 = time()
     model.fit(x, x, batch_size=args.batch_size, epochs=args.epochs, callbacks=[csv_logger])
     print('Training time: ', time() - t0)
-    model.save(args.save_dir + '/%s-pretrain-model-%d.h5' % (args.dataset, args.epochs))
+    model.save(args.save_dir + '/custom-pretrain-model-%d.h5' % args.epochs)
 
     # extract features
     feature_model = Model(inputs=model.input, outputs=model.get_layer(name='embedding').output)
@@ -84,3 +81,4 @@ if __name__ == "__main__":
     pred = km.fit_predict(features)
     from . import metrics
     print('acc=', metrics.acc(y, pred), 'nmi=', metrics.nmi(y, pred), 'ari=', metrics.ari(y, pred))
+
