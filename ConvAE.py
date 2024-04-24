@@ -1,6 +1,6 @@
 from keras.layers import Conv2D, Conv2DTranspose, Dense, Flatten, Reshape
 from keras.models import Sequential, Model
-from keras.utils.vis_utils import plot_model
+from keras.utils import plot_model
 import numpy as np
 from datasets import load_custom_dataset  # Import the custom dataset loader function
 
