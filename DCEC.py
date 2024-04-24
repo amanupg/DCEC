@@ -1,9 +1,9 @@
 from time import time
 import numpy as np
 import keras.backend as K
-from keras.engine.topology import Layer, InputSpec
+from keras.layers import Layer, InputSpec
 from keras.models import Model
-from keras.utils.vis_utils import plot_model
+from keras.utils import plot_model
 from sklearn.cluster import KMeans
 import metrics
 from ConvAE import CAE
